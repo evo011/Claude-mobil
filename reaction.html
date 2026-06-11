@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d2137">
+<title>Blitz-Reaktion</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    touch-action: none;
+    overscroll-behavior: none;
+    -webkit-user-select: none;
+    user-select: none;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    color: white;
+  }
+  #stage {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: calc(env(safe-area-inset-top) + 20px) 28px calc(env(safe-area-inset-bottom) + 20px);
+    background: #0d2137;
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+  #stage.waiting { background: #8f1d2c; }
+  #stage.go { background: #1d8f4a; transition: none; }
+  #stage.early { background: #8a6d1a; }
+  .topbar {
+    position: fixed;
+    top: calc(env(safe-area-inset-top) + 12px);
+    left: 16px;
+    z-index: 5;
+  }
+  .topbar a {
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 700;
+    opacity: 0.7;
+    padding: 8px;
+  }
+  .big {
+    font-size: 64px;
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+  h1 {
+    font-size: 34px;
+    font-weight: 900;
+    margin-bottom: 10px;
+  }
+  #msg {
+    font-size: 18px;
+    font-weight: 600;
+    opacity: 0.85;
+    max-width: 320px;
+    line-height: 1.45;
+  }
+  #result {
+    font-size: 72px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 8px;
+  }
+  #verdict {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+  #best {
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffd64d;
+    margin-top: 18px;
+  }
+  .dots {
+    display: flex;
+    gap: 10px;
+    margin-top: 26px;
+  }
+  .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+  }
+  .dot.done { background: #ffd64d; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="topbar"><a href="index.html">‹ Arcade</a></div>
+<div id="stage">
+  <div id="intro">
+    <div class="big">⚡️</div>
+    <h1>Blitz-Reaktion</h1>
+    <p id="introMsg">Warte auf <b>Grün</b>, dann tippe so schnell du kannst.<br>5 Runden — dein Durchschnitt zählt.<br><br>Tippe, um zu starten.</p>
+  </div>
+  <div id="wait" class="hidden">
+    <div class="big">🔴</div>
+    <h1>Warte…</h1>
+    <p id="msg">Nicht zu früh tippen!</p>
+  </div>
+  <div id="go" class="hidden">
+    <div class="big">🟢</div>
+    <h1>JETZT!</h1>
+  </div>
+  <div id="score" class="hidden">
+    <div id="result">0</div>
+    <div id="verdict"></div>
+    <p id="scoreMsg">Tippe für die nächste Runde</p>
+    <div id="best"></div>
+  </div>
+  <div class="dots" id="dots"></div>
+</div>
+<script>
+(() => {
+  const stage = document.getElementById('stage');
+  const screens = {
+    intro: document.getElementById('intro'),
+    wait: document.getElementById('wait'),
+    go: document.getElementById('go'),
+    score: document.getElementById('score'),
+  };
+  const resultEl = document.getElementById('result');
+  const verdictEl = document.getElementById('verdict');
+  const scoreMsg = document.getElementById('scoreMsg');
+  const bestEl = document.getElementById('best');
+  const dotsEl = document.getElementById('dots');
+
+  const ROUNDS = 5;
+  let mode = 'intro'; // intro | waiting | go | score
+  let times = [], goTime = 0, waitTimer = null;
+
+  function show(name) {
+    for (const k in screens) screens[k].classList.toggle('hidden', k !== name);
+  }
+
+  function drawDots() {
+    dotsEl.innerHTML = '';
+    for (let i = 0; i < ROUNDS; i++) {
+      const d = document.createElement('div');
+      d.className = 'dot' + (i < times.length ? ' done' : '');
+      dotsEl.appendChild(d);
+    }
+  }
+
+  function verdict(ms) {
+    if (ms < 180) return '🤯 Übermenschlich!';
+    if (ms < 230) return '🔥 Blitzschnell!';
+    if (ms < 290) return '💪 Richtig gut!';
+    if (ms < 360) return '🙂 Solide.';
+    if (ms < 450) return '🐢 Geht schneller…';
+    return '😴 Aufwachen!';
+  }
+
+  function startRound() {
+    mode = 'waiting';
+    stage.className = 'waiting';
+    show('wait');
+    drawDots();
+    const delay = 1200 + Math.random() * 2800;
+    waitTimer = setTimeout(() => {
+      mode = 'go';
+      stage.className = 'go';
+      show('go');
+      navigator.vibrate && navigator.vibrate(20);
+      goTime = performance.now();
+    }, delay);
+  }
+
+  function tooEarly() {
+    clearTimeout(waitTimer);
+    mode = 'score';
+    stage.className = 'early';
+    show('score');
+    resultEl.textContent = '🙈';
+    verdictEl.textContent = 'Zu früh getippt!';
+    scoreMsg.textContent = 'Die Runde zählt nicht. Tippe für einen neuen Versuch.';
+    bestEl.textContent = '';
+    navigator.vibrate && navigator.vibrate([60, 40, 60]);
+  }
+
+  function hit() {
+    const ms = Math.round(performance.now() - goTime);
+    times.push(ms);
+    mode = times.length >= ROUNDS ? 'final' : 'score';
+    stage.className = '';
+    show('score');
+    drawDots();
+    navigator.vibrate && navigator.vibrate(15);
+
+    if (times.length >= ROUNDS) {
+      const avg = Math.round(times.reduce((a, b) => a + b) / times.length);
+      const fastest = Math.min(...times);
+      resultEl.textContent = avg + ' ms';
+      verdictEl.textContent = 'Ø aus ' + ROUNDS + ' Runden — ' + verdict(avg);
+      scoreMsg.textContent = 'Schnellste Runde: ' + fastest + ' ms. Tippe für eine neue Serie.';
+      const best = +(localStorage.getItem('reaction_best_ms') || Infinity);
+      if (avg < best) {
+        localStorage.setItem('reaction_best_ms', avg);
+        bestEl.textContent = '🏆 Neuer Rekord!';
+        navigator.vibrate && navigator.vibrate([30, 50, 30, 50, 80]);
+      } else if (isFinite(best)) {
+        bestEl.textContent = '🏆 Rekord: ' + best + ' ms';
+      }
+      times = [];
+      mode = 'score';
+    } else {
+      resultEl.textContent = ms + ' ms';
+      verdictEl.textContent = verdict(ms);
+      scoreMsg.textContent = 'Runde ' + times.length + ' von ' + ROUNDS + ' — tippe für die nächste.';
+      bestEl.textContent = '';
+    }
+  }
+
+  function tap(e) {
+    if (e.cancelable) e.preventDefault();
+    if (mode === 'intro' || mode === 'score') startRound();
+    else if (mode === 'waiting') tooEarly();
+    else if (mode === 'go') hit();
+  }
+
+  stage.addEventListener('touchstart', tap, { passive: false });
+  stage.addEventListener('mousedown', (e) => {
+    // Touch löst zusätzlich mousedown aus — Doppelzählung vermeiden
+    if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+    tap(e);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') { e.preventDefault(); tap(e); }
+  });
+  document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+
+  drawDots();
+})();
+</script>
+</body>
+</html>
