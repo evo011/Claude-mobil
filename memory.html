@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#2d1240">
+<title>Emoji-Memory</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: linear-gradient(160deg, #2d1240, #5e1a4d);
+    touch-action: manipulation;
+    overscroll-behavior: none;
+    -webkit-user-select: none;
+    user-select: none;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    color: white;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 16px);
+    height: 100vh;
+    height: 100dvh;
+  }
+  .topbar {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .topbar a {
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 700;
+    opacity: 0.7;
+    padding: 8px 12px 8px 0;
+  }
+  #timer {
+    font-size: 28px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+  }
+  #moves {
+    font-size: 16px;
+    font-weight: 700;
+    opacity: 0.7;
+  }
+  #board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    width: 100%;
+    max-width: 420px;
+    flex: 1;
+    align-content: center;
+  }
+  .tile {
+    aspect-ratio: 3 / 4;
+    perspective: 600px;
+    cursor: pointer;
+  }
+  .tile .inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .tile.flipped .inner { transform: rotateY(180deg); }
+  .tile .face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+  }
+  .tile .back {
+    background: linear-gradient(135deg, #ff6b9d, #b8408a);
+    font-size: 26px;
+  }
+  .tile .front {
+    background: rgba(255,255,255,0.92);
+    transform: rotateY(180deg);
+    font-size: min(11vw, 44px);
+  }
+  .tile.matched .inner { animation: pop 0.4s; }
+  .tile.matched .front {
+    background: linear-gradient(135deg, #b9f6ca, #69f0ae);
+  }
+  @keyframes pop {
+    0% { transform: rotateY(180deg) scale(1); }
+    50% { transform: rotateY(180deg) scale(1.12); }
+    100% { transform: rotateY(180deg) scale(1); }
+  }
+  .tile.shake .inner { animation: shake 0.4s; }
+  @keyframes shake {
+    0%, 100% { transform: rotateY(180deg) translateX(0); }
+    25% { transform: rotateY(180deg) translateX(-5px); }
+    75% { transform: rotateY(180deg) translateX(5px); }
+  }
+  #overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.45);
+    z-index: 10;
+    padding: 20px;
+  }
+  #overlay.hidden { display: none; }
+  .panel {
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 28px;
+    padding: 32px 36px;
+    text-align: center;
+    max-width: 320px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+  }
+  .panel h1 {
+    font-size: 34px;
+    font-weight: 900;
+    margin-bottom: 10px;
+  }
+  .panel p {
+    font-size: 17px;
+    font-weight: 600;
+    opacity: 0.85;
+    margin-bottom: 22px;
+    line-height: 1.4;
+  }
+  .panel .record {
+    color: #ffd64d;
+    font-weight: 800;
+  }
+  button {
+    background: #ffd64d;
+    border: none;
+    color: #533;
+    font-size: 18px;
+    font-weight: 800;
+    padding: 14px 32px;
+    border-radius: 20px;
+    box-shadow: 0 4px 0 #c9a030, 0 6px 16px rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: transform 0.08s, box-shadow 0.08s;
+    font-family: inherit;
+  }
+  button:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #c9a030, 0 2px 8px rgba(0,0,0,0.2);
+  }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">‹ Arcade</a>
+  <div id="timer">0.0s</div>
+  <div id="moves">0 Züge</div>
+</div>
+<div id="board"></div>
+<div id="overlay">
+  <div class="panel" id="startPanel">
+    <h1>🧠 Emoji-Memory</h1>
+    <p>Finde alle 8 Paare so schnell wie möglich. Die Uhr läuft ab dem ersten Tipp!</p>
+    <button id="startBtn">Mischen &amp; los</button>
+  </div>
+  <div class="panel" id="winPanel" style="display:none">
+    <h1>🎉 Geschafft!</h1>
+    <p id="winText"></p>
+    <button id="retryBtn">Nochmal</button>
+  </div>
+</div>
+<script>
+(() => {
+  const EMOJIS = ['🦊', '🐙', '🦄', '🍕', '🚀', '🌈', '🎸', '🐸', '🍩', '⚽️', '🌵', '🤖', '🎲', '🦖', '🍉', '👻'];
+  const board = document.getElementById('board');
+  const timerEl = document.getElementById('timer');
+  const movesEl = document.getElementById('moves');
+  const overlay = document.getElementById('overlay');
+  const startPanel = document.getElementById('startPanel');
+  const winPanel = document.getElementById('winPanel');
+  const winText = document.getElementById('winText');
+
+  let deck = [], flipped = [], matched = 0, moves = 0;
+  let startTime = 0, timerId = null, locked = false;
+
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function buildBoard() {
+    const pool = shuffle([...EMOJIS]).slice(0, 8);
+    deck = shuffle([...pool, ...pool]);
+    board.innerHTML = '';
+    deck.forEach((emoji, i) => {
+      const tile = document.createElement('div');
+      tile.className = 'tile';
+      tile.dataset.emoji = emoji;
+      tile.innerHTML = '<div class="inner"><div class="face back">❓</div><div class="face front">' + emoji + '</div></div>';
+      tile.addEventListener('click', () => flip(tile));
+      board.appendChild(tile);
+    });
+    flipped = [];
+    matched = 0;
+    moves = 0;
+    startTime = 0;
+    locked = false;
+    movesEl.textContent = '0 Züge';
+    timerEl.textContent = '0.0s';
+  }
+
+  function tick() {
+    timerEl.textContent = ((performance.now() - startTime) / 1000).toFixed(1) + 's';
+  }
+
+  function flip(tile) {
+    if (locked || tile.classList.contains('flipped')) return;
+    if (!startTime) {
+      startTime = performance.now();
+      timerId = setInterval(tick, 100);
+    }
+    tile.classList.add('flipped');
+    flipped.push(tile);
+    navigator.vibrate && navigator.vibrate(8);
+    if (flipped.length < 2) return;
+
+    moves++;
+    movesEl.textContent = moves + ' Züge';
+    const [a, b] = flipped;
+    flipped = [];
+    if (a.dataset.emoji === b.dataset.emoji) {
+      a.classList.add('matched');
+      b.classList.add('matched');
+      matched++;
+      navigator.vibrate && navigator.vibrate([10, 30, 20]);
+      if (matched === 8) win();
+    } else {
+      locked = true;
+      a.classList.add('shake');
+      b.classList.add('shake');
+      setTimeout(() => {
+        a.classList.remove('flipped', 'shake');
+        b.classList.remove('flipped', 'shake');
+        locked = false;
+      }, 700);
+    }
+  }
+
+  function win() {
+    clearInterval(timerId);
+    const ms = Math.round(performance.now() - startTime);
+    const best = +(localStorage.getItem('memory_best_ms') || Infinity);
+    let record = '';
+    if (ms < best) {
+      localStorage.setItem('memory_best_ms', ms);
+      record = '<br><span class="record">🏆 Neuer Rekord!</span>';
+    } else if (isFinite(best)) {
+      record = '<br>Rekord: ' + (best / 1000).toFixed(1) + 's';
+    }
+    winText.innerHTML = (ms / 1000).toFixed(1) + 's bei ' + moves + ' Zügen.' + record;
+    navigator.vibrate && navigator.vibrate([30, 50, 30, 50, 80]);
+    setTimeout(() => {
+      startPanel.style.display = 'none';
+      winPanel.style.display = '';
+      overlay.classList.remove('hidden');
+    }, 600);
+  }
+
+  function start() {
+    buildBoard();
+    overlay.classList.add('hidden');
+  }
+
+  document.getElementById('startBtn').addEventListener('click', start);
+  document.getElementById('retryBtn').addEventListener('click', start);
+})();
+</script>
+</body>
+</html>
