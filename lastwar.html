@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#8fc4e8">
+<meta name="theme-color" content="#43484e">
 <title>Last Tap: Survival</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
     width: 100%; height: 100%;
     overflow: hidden;
-    background: #8fc4e8;
+    background: #43484e;
     touch-action: none;
     overscroll-behavior: none;
     -webkit-user-select: none;
@@ -47,14 +47,17 @@
     text-shadow: 0 2px 3px rgba(0,0,0,0.5);
   }
   #meters {
-    font-size: 34px;
-    font-weight: 900;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: 1px;
     font-variant-numeric: tabular-nums;
   }
   #kills {
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 700;
-    opacity: 0.9;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.75;
   }
   #ui {
     position: fixed;
@@ -68,20 +71,22 @@
   }
   .panel {
     pointer-events: auto;
-    background: rgba(30,32,24,0.78);
+    background: rgba(18,20,18,0.88);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 28px;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
     padding: 32px 36px;
     text-align: center;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
     max-width: 330px;
   }
   .panel h1 {
-    font-size: 32px;
-    font-weight: 900;
-    margin-bottom: 10px;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
   }
   .panel p {
     font-size: 16px;
@@ -106,23 +111,25 @@
     font-size: 30px;
     font-weight: 900;
   }
-  .record { color: #ffd64d; font-weight: 800; margin-bottom: 18px; }
+  .record { color: #c9a35a; font-weight: 700; letter-spacing: 1px; margin-bottom: 18px; }
   button {
-    background: #ffd64d;
+    background: #c9a35a;
     border: none;
-    color: #533;
-    font-size: 18px;
+    color: #1e1a10;
+    font-size: 15px;
     font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
     padding: 14px 32px;
-    border-radius: 20px;
-    box-shadow: 0 4px 0 #c9a030, 0 6px 16px rgba(0,0,0,0.3);
+    border-radius: 6px;
+    box-shadow: 0 3px 0 #8a6e38, 0 6px 16px rgba(0,0,0,0.4);
     cursor: pointer;
     transition: transform 0.08s, box-shadow 0.08s;
     font-family: inherit;
   }
   button:active {
-    transform: translateY(3px);
-    box-shadow: 0 1px 0 #c9a030, 0 2px 8px rgba(0,0,0,0.3);
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #8a6e38, 0 2px 8px rgba(0,0,0,0.4);
   }
   .hidden { display: none !important; }
 </style>
@@ -132,22 +139,22 @@
 <a id="back" href="index.html">‹ Arcade</a>
 <div id="hud" class="hidden">
   <div id="meters">0 m</div>
-  <div id="kills">☠️ 0</div>
+  <div id="kills">Kills 0</div>
 </div>
 <div id="ui">
   <div id="start" class="panel">
-    <h1>🪖 Last Tap: Survival</h1>
-    <p>Zieh deine Squad mit dem Finger nach links und rechts. Nimm die <b>grünen Tore</b> (+/×) mit, meide die roten — und halte die Zombie-Horde auf!</p>
-    <button id="startBtn">Ausrücken</button>
+    <h1>Last Tap: Survival</h1>
+    <p>Zieh deine Einheit mit dem Finger nach links und rechts. Grüne Tore verstärken die Truppe, rote schwächen sie. Halte die Horde auf.</p>
+    <button id="startBtn">Einsatz starten</button>
   </div>
   <div id="over" class="panel hidden">
-    <h1>💀 Überrannt!</h1>
+    <h1>Einheit gefallen</h1>
     <div class="stats">
       <div class="stat"><div class="label">Distanz</div><div class="value" id="finalMeters">0</div></div>
       <div class="stat"><div class="label">Kills</div><div class="value" id="finalKills">0</div></div>
     </div>
     <div class="record" id="recordLine"></div>
-    <button id="retryBtn">Neuer Versuch</button>
+    <button id="retryBtn">Neuer Einsatz</button>
   </div>
 </div>
 <script>
@@ -184,15 +191,15 @@
     count: 1,
     meters: 0,
     kills: 0,
-    speed: 0.17, // z-Einheiten pro Sekunde
+    speed: 0.12, // z-Einheiten pro Sekunde
+    volley: 0,
     gates: [],
     zombies: [],
     bullets: [],
     particles: [],
     texts: [],
-    fireAcc: 0,
-    nextGateAt: 30,
-    nextWaveAt: 14,
+    nextGateAt: 6,
+    nextWaveAt: 40,
     bossAt: 400,
     stripeOff: 0,
     propOff: 0,
@@ -222,21 +229,21 @@
     S.count = 5;
     S.meters = 0;
     S.kills = 0;
-    S.speed = 0.17;
+    S.speed = 0.12;
+    S.volley = 0;
     S.gates = [];
     S.zombies = [];
     S.bullets = [];
     S.particles = [];
     S.texts = [];
-    S.fireAcc = 0;
     S.nextGateAt = 6;
-    S.nextWaveAt = 50;
+    S.nextWaveAt = 40;
     S.bossAt = 400;
     S.pulse = 0;
     S.flash = 0;
     S.shake = 0;
     metersEl.textContent = '0 m';
-    killsEl.textContent = '☠️ 0';
+    killsEl.textContent = 'Kills 0';
   }
 
   function startGame() {
@@ -251,16 +258,16 @@
     S.mode = 'over';
     S.flash = 1;
     S.shake = 10;
-    burstAt(sx(S.wx, 0), bottomY(), '#4d79ff', 32);
+    burstAt(sx(S.wx, 0), bottomY(), '#5d7290', 30);
     navigator.vibrate && navigator.vibrate([80, 50, 120]);
     const score = Math.floor(S.meters);
     let rec;
     if (score > S.best) {
       S.best = score;
       localStorage.setItem('lastwar_best', score);
-      rec = '🏆 Neuer Rekord!';
+      rec = 'Neuer Rekord';
     } else {
-      rec = '🏆 Rekord: ' + S.best + ' m';
+      rec = 'Rekord: ' + S.best + ' m';
     }
     setTimeout(() => {
       finalMeters.textContent = score + ' m';
@@ -293,27 +300,28 @@
   }
 
   function spawnWave(big) {
-    const n = Math.min(30, ri(3, 5) + Math.floor(S.meters / 55)) * (big ? 2 : 1);
+    const n = Math.min(22, ri(4, 6) + Math.floor(S.meters / 70)) * (big ? 2 : 1);
     const cwx = rnd(-0.5, 0.5);
-    const hp = 1 + Math.floor(S.meters / 180);
+    const hp = 2 + Math.floor(S.meters / 150);
     for (let i = 0; i < n; i++) {
       S.zombies.push({
         wx: Math.min(Math.max(cwx + rnd(-0.45, 0.45), -0.92), 0.92),
         z: rnd(1.0, 1.45),
         wr: 0.055,
         hp, maxHp: hp,
-        vz: rnd(0.012, 0.05),
+        vz: rnd(0.01, 0.03),
         wob: Math.random() * Math.PI * 2,
+        atk: rnd(300, 900),
         boss: false,
       });
     }
   }
 
   function spawnBoss() {
-    const hp = 25 + Math.floor(S.meters / 8);
+    const hp = 30 + Math.floor(S.meters / 10);
     S.zombies.push({
       wx: rnd(-0.4, 0.4), z: 1.2, wr: 0.16,
-      hp, maxHp: hp, vz: 0.008, wob: 0, boss: true,
+      hp, maxHp: hp, vz: 0.006, wob: 0, atk: 600, boss: true,
     });
   }
 
@@ -340,21 +348,22 @@
     const diff = S.count - c0;
     const good = diff >= 0;
     S.pulse = 1;
-    floatText(sx(S.wx, 0), bottomY() - 130, (good ? '+' : '') + diff + ' Soldaten', good ? '#5dff8a' : '#ff6b6b', true);
-    burstAt(sx(S.wx, 0), bottomY() - 30, good ? '#5dff8a' : '#ff6b6b', 16);
+    floatText(sx(S.wx, 0), bottomY() - 130, (good ? '+' : '') + diff + ' Soldaten', good ? '#a8d98a' : '#e05d50', true);
+    burstAt(sx(S.wx, 0), bottomY() - 30, good ? '#a8d98a' : '#e05d50', 14);
     navigator.vibrate && navigator.vibrate(good ? 15 : [40, 30, 40]);
     if (S.count <= 0) { S.count = 0; gameOver(); }
   }
 
-  function hitSquad(z) {
-    const dmg = z.boss ? 8 + Math.ceil(z.hp / 4) : 1;
+  // Ein Zombie an der Frontlinie beißt zu — er stirbt dabei NICHT,
+  // sondern bleibt stehen, bis er erschossen wird.
+  function biteSquad(z) {
+    const dmg = z.boss ? 5 : 1;
     S.count -= dmg;
-    S.flash = Math.min(1, S.flash + (z.boss ? 0.8 : 0.35));
-    S.shake = Math.max(S.shake, z.boss ? 9 : 4);
-    floatText(sx(z.wx, 0.02), sy(0.02) - 40, '-' + dmg, '#ff6b6b', z.boss);
-    burstAt(sx(z.wx, 0.02), sy(0.02), '#ff6b6b', z.boss ? 20 : 7);
-    navigator.vibrate && navigator.vibrate(z.boss ? [60, 40, 60] : 25);
-    z.hp = 0;
+    S.flash = Math.min(1, S.flash + (z.boss ? 0.6 : 0.25));
+    S.shake = Math.max(S.shake, z.boss ? 7 : 3);
+    floatText(sx(z.wx, 0.06), sy(0.06) - 40, '-' + dmg, '#e05d50', z.boss);
+    burstAt(sx(z.wx, 0.06), sy(0.06), '#8a2f22', z.boss ? 14 : 5);
+    navigator.vibrate && navigator.vibrate(z.boss ? [60, 40, 60] : 20);
     if (S.count <= 0) { S.count = 0; gameOver(); }
   }
 
@@ -363,7 +372,7 @@
     if (S.mode !== 'playing') return;
 
     const ds = dt / 1000;
-    S.speed = Math.min(0.32, 0.17 + S.meters / 2600);
+    S.speed = Math.min(0.2, 0.12 + S.meters / 3500);
     S.meters += S.speed * ds * 55;
     metersEl.textContent = Math.floor(S.meters) + ' m';
 
@@ -377,24 +386,28 @@
     }
     if (S.meters >= S.nextWaveAt) {
       spawnWave(Math.random() < 0.18);
-      S.nextWaveAt = S.meters + rnd(16, 28);
+      S.nextWaveAt = S.meters + rnd(26, 40);
     }
     if (S.meters >= S.bossAt) {
       spawnBoss();
       S.bossAt += 400;
     }
 
-    // Auto-Feuer: Rate wächst mit der Squad
-    const rate = Math.min(26, 3.5 + S.count * 0.45);
-    S.fireAcc += dt;
-    const interval = 1000 / rate;
-    while (S.fireAcc >= interval) {
-      S.fireAcc -= interval;
-      S.bullets.push({ wx: S.wx + rnd(-0.7, 0.7) * squadWR(), z: 0.04 });
-      S.particles.push({ x: sx(S.wx, 0) + rnd(-20, 20), y: bottomY() - 38, vx: rnd(-0.5, 0.5), vy: -1.5, life: 0.35, color: '#ffe08a', size: 3 });
-      if (S.bullets.length > 200) S.bullets.shift();
+    // Salvenfeuer: jeder Soldat gibt parallel einen Schuss ab
+    S.volley -= dt;
+    if (S.volley <= 0) {
+      S.volley = 650;
+      const n = Math.min(S.count, 50);
+      for (let i = 0; i < n; i++) {
+        const f = formation[i];
+        S.bullets.push({ wx: S.wx + f.ox / rh(0) + rnd(-0.012, 0.012), z: 0.05 });
+      }
+      for (let i = 0; i < Math.min(n, 10); i++) {
+        S.particles.push({ x: sx(S.wx, 0) + rnd(-32, 32), y: bottomY() - rnd(28, 50), vx: rnd(-0.4, 0.4), vy: -1.2, life: 0.3, color: 'rgba(255,214,140,0.9)', size: 2.5 });
+      }
+      if (S.bullets.length > 400) S.bullets.splice(0, S.bullets.length - 400);
     }
-    for (const b of S.bullets) b.z += 1.9 * ds;
+    for (const b of S.bullets) b.z += 1.4 * ds;
     S.bullets = S.bullets.filter((b) => b.z < 1.5);
 
     // Tore
@@ -408,16 +421,31 @@
     }
     S.gates = S.gates.filter((g) => g.z > -0.2);
 
-    // Zombies
+    // Zombies: laufen bis zur Frontlinie, blocken dort und greifen an.
+    // Vorbeilaufen gibt es nicht — sie müssen erschossen werden.
+    const ZLINE = 0.06;
     for (const z of S.zombies) {
-      z.z -= (S.speed + z.vz) * ds;
-      z.wob += ds * 7;
-      if (z.z < 0.35 && z.z > 0) {
-        z.wx += Math.sign(S.wx - z.wx) * 0.22 * ds;
-      }
-      if (z.hp > 0 && z.z <= 0.02 && z.z > -0.06 && Math.abs(z.wx - S.wx) < z.wr + squadWR()) {
-        hitSquad(z);
-        if (S.mode !== 'playing') return;
+      z.wob += ds * 6;
+      if (z.z > ZLINE) {
+        z.z -= (S.speed + z.vz) * ds;
+        if (z.z < 0.4) {
+          const dxw = S.wx - z.wx;
+          z.wx += Math.sign(dxw) * Math.min(0.18 * ds, Math.abs(dxw));
+        }
+        if (z.z < ZLINE) z.z = ZLINE;
+      } else {
+        const dxw = S.wx - z.wx;
+        if (Math.abs(dxw) > 0.01) {
+          z.wx += Math.sign(dxw) * Math.min(0.3 * ds, Math.abs(dxw));
+        }
+        z.atk -= dt;
+        if (z.atk <= 0) {
+          z.atk = z.boss ? 1100 : 950;
+          if (Math.abs(z.wx - S.wx) < z.wr + squadWR()) {
+            biteSquad(z);
+            if (S.mode !== 'playing') return;
+          }
+        }
       }
     }
 
@@ -430,21 +458,21 @@
           b.z = 99;
           if (z.hp <= 0) {
             S.kills++;
-            killsEl.textContent = '☠️ ' + S.kills;
-            burstAt(sx(z.wx, z.z), sy(z.z), z.boss ? '#c06bff' : '#ff5252', z.boss ? 26 : 7);
+            killsEl.textContent = 'Kills ' + S.kills;
+            burstAt(sx(z.wx, z.z), sy(z.z), '#6e2a22', z.boss ? 22 : 7);
             if (z.boss) {
-              floatText(sx(z.wx, z.z), sy(z.z) - 30, 'BOSS DOWN!', '#ffd64d', true);
-              S.shake = Math.max(S.shake, 8);
+              floatText(sx(z.wx, z.z), sy(z.z) - 30, 'BOSS ERLEDIGT', '#c9a35a', true);
+              S.shake = Math.max(S.shake, 7);
               navigator.vibrate && navigator.vibrate([30, 40, 60]);
             }
           } else {
-            S.particles.push({ x: sx(z.wx, z.z), y: sy(z.z) - 10, vx: rnd(-1, 1), vy: -1, life: 0.5, color: '#ffe08a', size: 2.5 });
+            S.particles.push({ x: sx(z.wx, z.z), y: sy(z.z) - 10, vx: rnd(-1, 1), vy: -1, life: 0.5, color: 'rgba(255,214,140,0.85)', size: 2.5 });
           }
           break;
         }
       }
     }
-    S.zombies = S.zombies.filter((z) => z.hp > 0 && z.z > -0.3);
+    S.zombies = S.zombies.filter((z) => z.hp > 0);
   }
 
   function stepFx() {
@@ -482,8 +510,8 @@
     for (const b of S.bullets) {
       if (b.z > 1) continue;
       const p = pf(b.z);
-      ctx.strokeStyle = 'rgba(255,230,130,0.95)';
-      ctx.lineWidth = Math.max(1.5, 3.5 * p);
+      ctx.strokeStyle = 'rgba(255,214,140,0.85)';
+      ctx.lineWidth = Math.max(1, 2.5 * p);
       ctx.beginPath();
       ctx.moveTo(sx(b.wx, b.z), sy(b.z));
       ctx.lineTo(sx(b.wx, b.z + 0.03), sy(b.z + 0.03));
@@ -517,54 +545,63 @@
 
     ctx.restore();
 
+    // Vignette für den düsteren Look
+    const vg = ctx.createRadialGradient(W / 2, H * 0.55, H * 0.3, W / 2, H * 0.55, H * 0.85);
+    vg.addColorStop(0, 'rgba(0,0,0,0)');
+    vg.addColorStop(1, 'rgba(0,0,0,0.32)');
+    ctx.fillStyle = vg;
+    ctx.fillRect(0, 0, W, H);
+
     // Treffer-Flash
     if (S.flash > 0.02) {
-      ctx.fillStyle = 'rgba(255,40,40,' + (0.3 * S.flash).toFixed(3) + ')';
+      ctx.fillStyle = 'rgba(200,40,30,' + (0.28 * S.flash).toFixed(3) + ')';
       ctx.fillRect(0, 0, W, H);
     }
   }
 
   function drawSky() {
     const hy = horizonY();
+    // bedeckter Himmel
     const g = ctx.createLinearGradient(0, 0, 0, hy);
-    g.addColorStop(0, '#6fb6e8');
-    g.addColorStop(1, '#cfe9f4');
+    g.addColorStop(0, '#4d555e');
+    g.addColorStop(0.7, '#737b81');
+    g.addColorStop(1, '#8e9295');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, hy + 2);
-    // Sonne
-    const sgx = W * 0.78, sgy = H * 0.10;
-    const rg = ctx.createRadialGradient(sgx, sgy, 4, sgx, sgy, 70);
-    rg.addColorStop(0, 'rgba(255,245,200,0.95)');
-    rg.addColorStop(0.35, 'rgba(255,240,180,0.5)');
-    rg.addColorStop(1, 'rgba(255,240,180,0)');
-    ctx.fillStyle = rg;
-    ctx.fillRect(sgx - 70, sgy - 70, 140, 140);
-    // Wolken
-    cloudT += 0.0004;
-    ctx.fillStyle = 'rgba(255,255,255,0.8)';
-    for (let i = 0; i < 3; i++) {
-      const cx = ((i * 0.4 + 0.1 + (cloudT * (0.5 + i * 0.3)) % 1) % 1.2 - 0.1) * W;
-      const cy = hy * (0.25 + i * 0.22);
-      ctx.beginPath();
-      ctx.ellipse(cx, cy, 36, 11, 0, 0, Math.PI * 2);
-      ctx.ellipse(cx + 24, cy - 7, 24, 9, 0, 0, Math.PI * 2);
-      ctx.ellipse(cx - 22, cy - 5, 20, 8, 0, 0, Math.PI * 2);
-      ctx.fill();
+    // Skyline zerstörter Gebäude am Horizont
+    ctx.fillStyle = 'rgba(52,57,62,0.85)';
+    const bw = W / 14;
+    for (let i = 0; i < 14; i++) {
+      const bh = 12 + ((i * 53) % 34);
+      ctx.fillRect(i * bw, hy - bh, bw - 3, bh + 2);
+      if (i % 3 === 0) ctx.fillRect(i * bw + bw * 0.3, hy - bh - 7, bw * 0.25, 8);
+    }
+    // Rauchsäulen, langsam driftend
+    cloudT += 0.0003;
+    ctx.fillStyle = 'rgba(58,58,60,0.4)';
+    for (let i = 0; i < 2; i++) {
+      const cx = W * (0.22 + i * 0.5) + Math.sin(cloudT * 40 + i * 3) * 8;
+      for (let k = 0; k < 4; k++) {
+        ctx.beginPath();
+        ctx.ellipse(cx + k * 6 * (i ? 1 : -1), hy - 14 - k * 16, 14 + k * 7, 9 + k * 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
   }
 
   function drawGround() {
     const hy = horizonY();
+    // verbrannte Erde / Schlamm
     const g = ctx.createLinearGradient(0, hy, 0, H);
-    g.addColorStop(0, '#cbbf96');
-    g.addColorStop(1, '#dfd4ae');
+    g.addColorStop(0, '#56524a');
+    g.addColorStop(1, '#6a655a');
     ctx.fillStyle = g;
     ctx.fillRect(0, hy, W, H - hy);
-    // ferne Dünen
-    ctx.fillStyle = '#d6caa1';
+    // Trümmerhaufen in der Ferne
+    ctx.fillStyle = '#4c4942';
     ctx.beginPath();
-    ctx.ellipse(W * 0.18, hy + 6, W * 0.3, 14, 0, 0, Math.PI * 2);
-    ctx.ellipse(W * 0.85, hy + 9, W * 0.35, 18, 0, 0, Math.PI * 2);
+    ctx.ellipse(W * 0.16, hy + 7, W * 0.26, 12, 0, 0, Math.PI * 2);
+    ctx.ellipse(W * 0.86, hy + 10, W * 0.3, 15, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -587,19 +624,19 @@
   function drawRoad() {
     // Asphalt
     const g = ctx.createLinearGradient(0, horizonY(), 0, bottomY());
-    g.addColorStop(0, '#9d8f72');
-    g.addColorStop(1, '#b2a37f');
+    g.addColorStop(0, '#3f4246');
+    g.addColorStop(1, '#54575c');
     ctx.fillStyle = g;
     pathAlongRoad(-1, 1);
     ctx.fill();
-    // Randlinien
-    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    // abgenutzte Randlinien
+    ctx.fillStyle = 'rgba(225,225,215,0.22)';
     pathAlongRoad(-1.0, -0.955);
     ctx.fill();
     pathAlongRoad(0.955, 1.0);
     ctx.fill();
     // Mittelstreifen (scrollend)
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillStyle = 'rgba(225,225,215,0.25)';
     for (let z0 = -S.stripeOff; z0 < 1; z0 += 0.09) {
       const z1 = z0, z2 = z0 + 0.04;
       if (z2 < -0.06) continue;
@@ -611,16 +648,42 @@
       ctx.closePath();
       ctx.fill();
     }
-    // Deko am Straßenrand (scrollend): Felsen / Büsche
+    // Straßenrand: Container und Betonbarrieren
     for (let i = 0; i < 8; i++) {
       const z = ((i * 0.15 - S.propOff) % 1.2 + 1.2) % 1.2 - 0.05;
       if (z > 1 || z < -0.05) continue;
       const p = pf(z);
-      const side = i % 2 === 0 ? -1.22 : 1.22;
-      ctx.fillStyle = i % 4 < 2 ? '#8a7c5a' : '#6e7d4a';
-      ctx.beginPath();
-      ctx.ellipse(sx(side, z), sy(z) - 4 * p, 12 * p, 8 * p, 0, 0, Math.PI * 2);
-      ctx.fill();
+      const x = sx(i % 2 === 0 ? -1.42 : 1.42, z);
+      const y = sy(z);
+      if (i % 4 < 2) {
+        // Schiffscontainer
+        const cw = 70 * p, ch = 32 * p;
+        ctx.fillStyle = i % 4 === 0 ? '#7d4a2c' : '#5d6b46';
+        ctx.fillRect(x - cw / 2, y - ch, cw, ch);
+        ctx.fillStyle = 'rgba(255,255,255,0.12)';
+        ctx.fillRect(x - cw / 2, y - ch, cw, 5 * p);
+        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+        ctx.lineWidth = Math.max(0.5, p);
+        for (let r = 1; r < 4; r++) {
+          ctx.beginPath();
+          ctx.moveTo(x - cw / 2 + (cw * r) / 4, y - ch);
+          ctx.lineTo(x - cw / 2 + (cw * r) / 4, y);
+          ctx.stroke();
+        }
+      } else {
+        // Betonbarriere
+        const bw = 42 * p, bh = 16 * p;
+        ctx.fillStyle = '#83858a';
+        ctx.beginPath();
+        ctx.moveTo(x - bw / 2, y);
+        ctx.lineTo(x - bw / 2 + 6 * p, y - bh);
+        ctx.lineTo(x + bw / 2 - 6 * p, y - bh);
+        ctx.lineTo(x + bw / 2, y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = 'rgba(0,0,0,0.22)';
+        ctx.fillRect(x - bw / 2 + 6 * p, y - bh, bw - 12 * p, 3.5 * p);
+      }
     }
   }
 
@@ -645,16 +708,16 @@
       const alpha = gt.used ? 0.18 : 0.66;
       const grad = ctx.createLinearGradient(0, y - gh, 0, y);
       if (good) {
-        grad.addColorStop(0, 'rgba(70,220,130,' + alpha * 0.55 + ')');
-        grad.addColorStop(1, 'rgba(20,160,80,' + alpha + ')');
+        grad.addColorStop(0, 'rgba(110,190,150,' + alpha * 0.4 + ')');
+        grad.addColorStop(1, 'rgba(40,110,75,' + alpha + ')');
       } else {
-        grad.addColorStop(0, 'rgba(255,90,80,' + alpha * 0.55 + ')');
-        grad.addColorStop(1, 'rgba(190,30,30,' + alpha + ')');
+        grad.addColorStop(0, 'rgba(205,105,85,' + alpha * 0.4 + ')');
+        grad.addColorStop(1, 'rgba(135,40,32,' + alpha + ')');
       }
       ctx.fillStyle = grad;
       ctx.fillRect(x1 + 3 * p, y - gh, x2 - x1 - 6 * p, gh);
       // Rahmen + Pfosten
-      ctx.fillStyle = gt.used ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.85)';
+      ctx.fillStyle = gt.used ? 'rgba(225,228,224,0.2)' : 'rgba(225,228,224,0.7)';
       ctx.fillRect(x1, y - gh, 5 * p, gh);
       ctx.fillRect(x2 - 5 * p, y - gh, 5 * p, gh);
       ctx.fillRect(x1, y - gh - 4 * p, x2 - x1, 5 * p);
@@ -685,7 +748,7 @@
     ctx.ellipse(x, y, 14 * sc, 5 * sc, 0, 0, Math.PI * 2);
     ctx.fill();
     // Arme (nach vorn gestreckt, schwingend)
-    ctx.strokeStyle = z.boss ? '#6e2da0' : '#a82626';
+    ctx.strokeStyle = z.boss ? '#39432e' : '#4a583a';
     ctx.lineWidth = 3.5 * sc;
     const swing = Math.sin(z.wob * 2) * 4 * sc;
     ctx.beginPath();
@@ -694,22 +757,28 @@
     ctx.moveTo(x + 8 * sc, y - 16 * sc);
     ctx.lineTo(x + 13 * sc, y - 8 * sc - swing);
     ctx.stroke();
-    // Körper
-    ctx.fillStyle = z.boss ? '#8a3fc4' : '#d23c3c';
-    ctx.strokeStyle = z.boss ? '#5e2687' : '#8f1d1d';
+    // Körper (fahle Zombie-Haut, zerrissene Kleidung)
+    ctx.fillStyle = z.boss ? '#4a5440' : '#5f6f48';
+    ctx.strokeStyle = z.boss ? '#2c331f' : '#3c4a2c';
     ctx.lineWidth = 2 * sc;
     ctx.beginPath();
     ctx.ellipse(x + lean * 0.3, y - 12 * sc, 9 * sc, 12 * sc, lean * 0.02, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
+    // Blutfleck
+    ctx.fillStyle = 'rgba(110,42,34,0.8)';
+    ctx.beginPath();
+    ctx.ellipse(x + lean * 0.3 - 3 * sc, y - 9 * sc, 3.2 * sc, 4 * sc, 0.4, 0, Math.PI * 2);
+    ctx.fill();
     // Kopf
-    ctx.fillStyle = z.boss ? '#7a35ad' : '#b92f2f';
+    ctx.fillStyle = z.boss ? '#5c6a4a' : '#74845a';
+    ctx.strokeStyle = z.boss ? '#2c331f' : '#3c4a2c';
     ctx.beginPath();
     ctx.arc(x + lean * 0.5, y - 27 * sc, 5.5 * sc, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
     // Augen
-    ctx.fillStyle = '#ffe9a8';
+    ctx.fillStyle = z.boss ? '#e05d50' : '#d9d4b0';
     ctx.beginPath();
     ctx.arc(x + lean * 0.5 - 2 * sc, y - 28 * sc, 1.3 * sc, 0, Math.PI * 2);
     ctx.arc(x + lean * 0.5 + 2 * sc, y - 28 * sc, 1.3 * sc, 0, Math.PI * 2);
@@ -719,7 +788,7 @@
       const w = 60 * sc;
       ctx.fillStyle = 'rgba(0,0,0,0.45)';
       ctx.fillRect(x - w / 2, y - 42 * sc, w, 6 * sc);
-      ctx.fillStyle = '#7dff7d';
+      ctx.fillStyle = '#9fdc7a';
       ctx.fillRect(x - w / 2, y - 42 * sc, w * (z.hp / z.maxHp), 6 * sc);
     }
   }
@@ -741,7 +810,7 @@
     ctx.ellipse(x, y + 7, 7, 2.6, 0, 0, Math.PI * 2);
     ctx.fill();
     // Beine
-    ctx.strokeStyle = '#26407a';
+    ctx.strokeStyle = '#2c3136';
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.moveTo(x - 2.5, y);
@@ -749,27 +818,27 @@
     ctx.moveTo(x + 2.5, y);
     ctx.lineTo(x + 2.5, y + 6 - step * 0.5);
     ctx.stroke();
-    // Körper
-    ctx.fillStyle = '#3b6fe0';
-    ctx.strokeStyle = '#1f3f8f';
+    // Körper (taktische Weste)
+    ctx.fillStyle = '#41506b';
+    ctx.strokeStyle = '#262f42';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.ellipse(x, y - 4 + step * 0.3, 5.2, 6.2, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
     // Waffe (nach vorn / oben)
-    ctx.strokeStyle = '#2b2b2b';
+    ctx.strokeStyle = '#1d1d1d';
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(x + 4, y - 6);
     ctx.lineTo(x + 6.5, y - 13);
     ctx.stroke();
     // Kopf + Helm
-    ctx.fillStyle = '#f0c39a';
+    ctx.fillStyle = '#e8bd92';
     ctx.beginPath();
     ctx.arc(x, y - 12 + step * 0.3, 3.4, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = '#274a9e';
+    ctx.fillStyle = '#33415c';
     ctx.beginPath();
     ctx.arc(x, y - 13 + step * 0.3, 3.6, Math.PI, 0);
     ctx.fill();
