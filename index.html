@@ -86,6 +86,7 @@
   .card:nth-child(1) { animation-delay: 0.05s; }
   .card:nth-child(2) { animation-delay: 0.15s; }
   .card:nth-child(3) { animation-delay: 0.25s; }
+  .card:nth-child(4) { animation-delay: 0.35s; }
   @keyframes floatIn {
     from { opacity: 0; transform: translateY(24px); }
     to { opacity: 1; transform: translateY(0); }
@@ -108,6 +109,7 @@
   .card.flappy .emoji { background: linear-gradient(135deg, #70c5ce, #4a9fb8); }
   .card.memory .emoji { background: linear-gradient(135deg, #ff6b9d, #c84b7f); }
   .card.reaction .emoji { background: linear-gradient(135deg, #6be5ff, #3a8fd9); }
+  .card.lastwar .emoji { background: linear-gradient(135deg, #9aa86b, #5e6b3a); }
   .card .info { flex: 1; min-width: 0; }
   .card h2 {
     font-size: 22px;
@@ -175,6 +177,15 @@
     </div>
     <div class="arrow">›</div>
   </a>
+  <a class="card lastwar" href="lastwar.html">
+    <div class="emoji">🪖</div>
+    <div class="info">
+      <h2>Last Tap: Survival</h2>
+      <p>Squad vergrößern, Horde aufhalten</p>
+      <div class="best" id="bestLastwar"></div>
+    </div>
+    <div class="arrow">›</div>
+  </a>
 </div>
 <footer>Tipp: Über „Zum Home-Bildschirm" in Safari wird daraus eine App.</footer>
 <script>
@@ -191,6 +202,10 @@
   const reaction = localStorage.getItem('reaction_best_ms');
   if (reaction) {
     document.getElementById('bestReaction').textContent = '🏆 Best: ' + reaction + ' ms';
+  }
+  const lastwar = localStorage.getItem('lastwar_best');
+  if (lastwar && +lastwar > 0) {
+    document.getElementById('bestLastwar').textContent = '🏆 Best: ' + lastwar + ' m';
   }
 
   // Funkelnder Sternenhimmel

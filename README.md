@@ -9,6 +9,7 @@ Eine kleine Spiele-Website fürs iPhone — drei Mini-Games, jeweils eine einzig
 | 🐤 **Flappy Tap** | `flappy.html` | Flappy-Bird-Clone: tippe, um zu fliegen, weich den Rohren aus |
 | 🧠 **Emoji-Memory** | `memory.html` | Finde alle 8 Emoji-Paare auf Zeit |
 | ⚡️ **Blitz-Reaktion** | `reaction.html` | Warte auf Grün, tippe so schnell du kannst — 5 Runden, Durchschnitt zählt |
+| 🪖 **Last Tap: Survival** | `lastwar.html` | Zieh deine Squad durch Multiplikator-Tore und halte die Zombie-Horde auf |
 
 `index.html` ist die Arcade-Startseite mit funkelndem Sternenhimmel und deinen High-Scores.
 
